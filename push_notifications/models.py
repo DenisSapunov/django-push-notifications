@@ -87,9 +87,9 @@ class GCMDevice(Device):
 	# device_id cannot be a reliable primary key as fragmentation between different devices
 	# can make it turn out to be null and such:
 	# http://android-developers.blogspot.co.uk/2011/03/identifying-app-installations.html
-	device_id = HexIntegerField(
+	device_id = models.CharField(
 		verbose_name=_("Device ID"), blank=True, null=True, db_index=True,
-		help_text=_("ANDROID_ID / TelephonyManager.getDeviceId() (always as hex)")
+		max_length=255,
 	)
 	registration_id = models.TextField(verbose_name=_("Registration ID"), unique=SETTINGS["UNIQUE_REG_ID"])
 	cloud_message_type = models.CharField(
