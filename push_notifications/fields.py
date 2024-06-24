@@ -2,7 +2,7 @@ import re
 import struct
 
 from django import forms
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
 
@@ -13,7 +13,7 @@ UNSIGNED_64BIT_INT_MIN_VALUE = 0
 UNSIGNED_64BIT_INT_MAX_VALUE = 2 ** 64 - 1
 
 
-hex_re = re.compile(r"^(([0-9A-f])|(0x[0-9A-f]))+$")
+hex_re = re.compile(r"^(0x)?([0-9a-f])+$", re.I)
 signed_integer_vendors = [
 	"postgresql",
 	"sqlite",
@@ -48,7 +48,7 @@ class HexadecimalField(forms.CharField):
 		self.default_validators = [
 			RegexValidator(hex_re, _("Enter a valid hexadecimal number"), "invalid")
 		]
-		super(HexadecimalField, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 
 	def prepare_value(self, value):
 		# converts bigint from db to hex before it is displayed in admin
@@ -58,7 +58,6 @@ class HexadecimalField(forms.CharField):
 		return super(forms.CharField, self).prepare_value(value)
 
 
-# https://docs.djangoproject.com/en/1.11/topics/migrations/#considerations-when-removing-model-fields
 class HexIntegerField(models.BigIntegerField):
 	"""
 	This field stores a hexadecimal *string* of up to 64 bits as an unsigned integer

@@ -9,6 +9,25 @@ from ..models import APNSDevice, GCMDevice, WebPushDevice, WNSDevice
 from ..settings import PUSH_NOTIFICATIONS_SETTINGS as SETTINGS
 
 
+# Fields
+class HexIntegerField(IntegerField):
+	"""
+	Store an integer represented as a hex string of form "0x01".
+	"""
+
+	def to_internal_value(self, data):
+		# validate hex string and convert it to the unsigned
+		# integer representation for internal use
+		try:
+			data = int(data, 16) if type(data) != int else data
+		except ValueError:
+			raise ValidationError("Device ID is not a valid hex number")
+		return super(HexIntegerField, self).to_internal_value(data)
+
+	def to_representation(self, value):
+		return value
+
+
 # Serializers
 class DeviceSerializerMixin(ModelSerializer):
 	class Meta:
@@ -27,10 +46,10 @@ class APNSDeviceSerializer(ModelSerializer):
 		model = APNSDevice
 
 	def validate_registration_id(self, value):
-		# iOS device tokens are 256-bit hexadecimal (64 characters). In 2016 Apple is increasing
-		# iOS device tokens to 100 bytes hexadecimal (200 characters).
 
-		if hex_re.match(value) is None or len(value) not in (64, 200):
+		# https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622958-application
+		# As of 02/2023 APNS tokens (registration_id) "are of variable length. Do not hard-code their size."
+		if hex_re.match(value) is None:
 			raise ValidationError("Registration ID (device token) is invalid")
 
 		return value
